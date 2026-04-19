@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editor — OpenBlog</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="container">
+      <div class="header-inner">
+        <a href="index.html" class="site-title">✍️ OpenBlog</a>
+        <div class="header-actions">
+          <span id="editorStatus" class="editor-status"></span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Editor top bar -->
+  <div class="editor-topbar">
+    <div class="editor-topbar-left">
+      <a href="index.html" class="btn btn-ghost btn-sm">← Back</a>
+      <span id="pageHeading" style="font-weight:700;font-size:.95rem;">New Post</span>
+    </div>
+    <div class="editor-topbar-right">
+      <button id="btnCancel"     class="btn btn-secondary btn-sm">Discard</button>
+      <button id="btnSave"       class="btn btn-secondary btn-sm" title="Save (Ctrl+S)">💾 Save</button>
+      <button id="btnSaveReturn" class="btn btn-primary    btn-sm">Publish &amp; Return ↩</button>
+    </div>
+  </div>
+
+  <!-- Editor form -->
+  <div class="editor-form">
+
+    <!-- Title -->
+    <div class="field-group">
+      <input
+        id="postTitle"
+        type="text"
+        class="title-input"
+        placeholder="Post title…"
+        autocomplete="off"
+        maxlength="200"
+      >
+    </div>
+
+    <!-- Tags -->
+    <div class="field-group">
+      <label class="field-label" for="postTags">Tags <small style="font-weight:400;text-transform:none;">(comma-separated)</small></label>
+      <input
+        id="postTags"
+        type="text"
+        class="tags-input"
+        placeholder="e.g. tech, travel, food"
+        autocomplete="off"
+      >
+    </div>
+
+    <!-- Rich-text editor -->
+    <div class="field-group">
+      <label class="field-label">Content</label>
+
+      <div class="rte-wrapper">
+        <!-- Toolbar -->
+        <div class="rte-toolbar" role="toolbar" aria-label="Formatting options">
+
+          <!-- Block format -->
+          <select id="headingSelect" class="tb-select" title="Block format">
+            <option value="" disabled selected>Format</option>
+            <option value="p">Paragraph</option>
+            <option value="h1">Heading 1</option>
+            <option value="h2">Heading 2</option>
+            <option value="h3">Heading 3</option>
+            <option value="h4">Heading 4</option>
+            <option value="pre">Code block</option>
+          </select>
+
+          <div class="sep"></div>
+
+          <!-- Inline formats -->
+          <button id="tb-bold"      class="tb-btn" title="Bold (Ctrl+B)"         ><b>B</b></button>
+          <button id="tb-italic"    class="tb-btn" title="Italic (Ctrl+I)"       ><i>I</i></button>
+          <button id="tb-underline" class="tb-btn" title="Underline (Ctrl+U)"    ><u>U</u></button>
+          <button id="tb-strike"    class="tb-btn" title="Strikethrough"         ><s>S</s></button>
+
+          <div class="sep"></div>
+
+          <!-- Lists -->
+          <button id="tb-ul"    class="tb-btn" title="Unordered list">• List</button>
+          <button id="tb-ol"    class="tb-btn" title="Ordered list">1. List</button>
+          <button id="tb-quote" class="tb-btn" title="Blockquote">❝</button>
+
+          <div class="sep"></div>
+
+          <!-- Alignment -->
+          <button id="tb-align-l" class="tb-btn" title="Align left">  ≡L</button>
+          <button id="tb-align-c" class="tb-btn" title="Align center">≡C</button>
+          <button id="tb-align-r" class="tb-btn" title="Align right"> ≡R</button>
+
+          <div class="sep"></div>
+
+          <!-- Link & image -->
+          <button id="tb-link"  class="tb-btn" title="Insert link">🔗 Link</button>
+          <button id="tb-image" class="tb-btn" title="Insert image">🖼 Image</button>
+
+          <div class="sep"></div>
+
+          <!-- Clear formatting -->
+          <button id="tb-removeformat" class="tb-btn" title="Remove formatting">✕ Format</button>
+        </div>
+
+        <!-- Content area -->
+        <div
+          id="rteContent"
+          class="rte-content"
+          contenteditable="true"
+          role="textbox"
+          aria-multiline="true"
+          aria-label="Post content"
+          spellcheck="true"
+        ></div>
+      </div>
+    </div>
+  </div><!-- /.editor-form -->
+
+  <!-- ===== Link modal ===== -->
+  <div id="linkModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="linkModalTitle">
+    <div class="modal">
+      <div class="modal-title" id="linkModalTitle">Insert Link</div>
+
+      <div class="modal-field">
+        <label class="modal-label" for="linkUrl">URL</label>
+        <input id="linkUrl" type="url" class="modal-input" placeholder="https://example.com" autocomplete="off">
+      </div>
+
+      <div class="modal-field">
+        <label class="modal-label" for="linkText">Display text <small style="font-weight:400;">(optional — uses selected text if present)</small></label>
+        <input id="linkText" type="text" class="modal-input" placeholder="Link text…" autocomplete="off">
+      </div>
+
+      <div class="modal-actions">
+        <button id="linkCancel" class="btn btn-secondary">Cancel</button>
+        <button id="linkInsert" class="btn btn-primary">Insert</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Image modal ===== -->
+  <div id="imageModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="imageModalTitle">
+    <div class="modal">
+      <div class="modal-title" id="imageModalTitle">Insert Image</div>
+
+      <!-- Upload from computer -->
+      <div class="modal-field">
+        <label class="modal-label">Upload from computer</label>
+        <label class="modal-file-label">
+          📁 Choose image file
+          <input id="imageFile" type="file" accept="image/*" style="display:none;">
+        </label>
+      </div>
+
+      <div class="modal-or">or</div>
+
+      <!-- Image URL -->
+      <div class="modal-field">
+        <label class="modal-label" for="imageUrl">Image URL</label>
+        <input id="imageUrl" type="url" class="modal-input" placeholder="https://…/image.jpg" autocomplete="off">
+      </div>
+
+      <div class="modal-field">
+        <label class="modal-label" for="imageAlt">Alt text <small style="font-weight:400;">(recommended)</small></label>
+        <input id="imageAlt" type="text" class="modal-input" placeholder="Describe the image…" autocomplete="off">
+      </div>
+
+      <!-- Preview -->
+      <img id="imagePreview" src="" alt="Preview" class="hidden"
+           style="max-height:160px;border-radius:6px;margin-bottom:8px;">
+
+      <div class="modal-actions">
+        <button id="imageCancel" class="btn btn-secondary">Cancel</button>
+        <button id="imageInsert" class="btn btn-primary">Insert</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container"></div>
+
+  <script src="js/storage.js"></script>
+  <script src="js/editor.js"></script>
+</body>
+</html>
