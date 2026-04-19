@@ -45,6 +45,9 @@
     setTimeout(() => { if (statusToken === token) setStatus(''); }, delay);
   }
 
+  /* ---- Constants ---- */
+  const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB
+
   /* ---- State ---- */
   let postId      = null;
   let isDirty     = false;
@@ -140,7 +143,14 @@
     overlay.classList.remove('hidden');
     urlInput.focus();
 
-    function cleanup() {
+    function handleKeydown(e) {
+      if (e.key === 'Enter')  { qs('#linkInsert').click(); }
+      if (e.key === 'Escape') { closeModal(); }
+    }
+    urlInput.addEventListener('keydown', handleKeydown);
+
+    function closeModal() {
+      urlInput.removeEventListener('keydown', handleKeydown);
       overlay.classList.add('hidden');
       qs('#linkInsert').onclick = null;
       qs('#linkCancel').onclick = null;
@@ -163,22 +173,10 @@
         }
         showToast('Link inserted.', 'success');
       }
-      cleanup();
+      closeModal();
     };
 
-    qs('#linkCancel').onclick = cleanup;
-
-    function handleKeydown(e) {
-      if (e.key === 'Enter')  { qs('#linkInsert').click(); }
-      if (e.key === 'Escape') { cleanup(); }
-    }
-    urlInput.addEventListener('keydown', handleKeydown);
-
-    const _cleanup = cleanup;
-    cleanup = () => {
-      urlInput.removeEventListener('keydown', handleKeydown);
-      _cleanup();
-    };
+    qs('#linkCancel').onclick = closeModal;
   }
 
   /* ---- Image insertion ---- */
@@ -202,9 +200,9 @@
 
     // Preview on URL input — only allow safe schemes
     urlInput.oninput = () => {
-      const src = urlInput.value.trim();
-      if (src && isSafeUrl(src)) {
-        preview.src = src;
+      const safeSrc = getSafeUrl(urlInput.value.trim());
+      if (safeSrc) {
+        preview.src = safeSrc;
         preview.classList.remove('hidden');
       } else {
         preview.src = '';
@@ -212,15 +210,26 @@
       }
     };
 
-    // File upload → base64 preview
+    // File upload → base64 preview (validate type and cap at 5 MB)
     fileInput.onchange = () => {
       const file = fileInput.files[0];
       if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        showToast('Please select an image file.', 'error');
+        return;
+      }
+      if (file.size > MAX_IMAGE_BYTES) {
+        showToast('Image must be smaller than 5 MB.', 'error');
+        return;
+      }
       const reader = new FileReader();
-      reader.onload = e => {
-        urlInput.value = e.target.result;
-        preview.src = e.target.result;
-        preview.classList.remove('hidden');
+      reader.onload = ev => {
+        const result = ev.target.result;
+        if (typeof result === 'string' && /^data:image\//i.test(result)) {
+          urlInput.value = result;
+          preview.src = result;
+          preview.classList.remove('hidden');
+        }
       };
       reader.readAsDataURL(file);
     };
@@ -360,18 +369,28 @@
   }
 
   /* ---- URL safety check ---- */
-  function isSafeUrl(url) {
-    if (!url) return false;
-    // Always allow data: URIs that are image types (produced by FileReader uploads)
-    if (/^data:image\//i.test(url)) return true;
-    // Parse URL relative to current page so relative paths are resolved correctly
+  /**
+   * Returns the normalized, safe URL string if the input is allowed, or null otherwise.
+   * Allowed: data:image/ (base64 uploads), http:, https:, mailto:.
+   */
+  function getSafeUrl(url) {
+    if (!url) return null;
+    // Always allow data: URIs for images (from FileReader uploads)
+    if (/^data:image\//i.test(url)) return url;
+    // Parse relative to current page so relative paths resolve to http/https
     try {
       const parsed = new URL(url, window.location.href);
-      // Allowlist of safe protocols only
-      return ['http:', 'https:', 'mailto:'].includes(parsed.protocol);
+      if (['http:', 'https:', 'mailto:'].includes(parsed.protocol)) {
+        return parsed.href;
+      }
     } catch {
-      return false;
+      // malformed URL
     }
+    return null;
+  }
+
+  function isSafeUrl(url) {
+    return getSafeUrl(url) !== null;
   }
 
   /* ---- Escape helpers ---- */

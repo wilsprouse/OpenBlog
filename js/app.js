@@ -17,11 +17,15 @@
   }
 
   function getExcerpt(html, maxLen) {
-    const div = document.createElement('div');
-    div.innerHTML = html || '';
-    const text = div.textContent || '';
+    const text = htmlToText(html);
     if (text.length <= maxLen) return text;
     return text.slice(0, maxLen).trimEnd() + '…';
+  }
+
+  function htmlToText(html) {
+    const div = document.createElement('div');
+    div.innerHTML = html || '';
+    return div.textContent || '';
   }
 
   function showToast(msg, type) {
@@ -77,11 +81,14 @@
     // Filter by search term
     if (searchTerm) {
       const q = searchTerm.toLowerCase();
-      posts = posts.filter(p =>
-        (p.title || '').toLowerCase().includes(q) ||
-        getExcerpt(p.content, 9999).toLowerCase().includes(q) ||
-        (Array.isArray(p.tags) && p.tags.some(t => t.toLowerCase().includes(q)))
-      );
+      posts = posts.filter(p => {
+        const text = htmlToText(p.content);
+        return (
+          (p.title || '').toLowerCase().includes(q) ||
+          text.toLowerCase().includes(q) ||
+          (Array.isArray(p.tags) && p.tags.some(t => t.toLowerCase().includes(q)))
+        );
+      });
     }
 
     if (posts.length === 0) {
@@ -129,7 +136,7 @@
     const tags  = Array.isArray(post.tags) ? post.tags : [];
     const tagHTML = tags
       .filter(Boolean)
-      .map(t => `<span class="tag${activeTag === t ? ' active' : ''}" data-tag="${escHtml(t)}">${escHtml(t)}</span>`)
+      .map(t => `<span class="tag${activeTag === t ? ' active' : ''}" data-tag="${escAttr(t)}">${escHtml(t)}</span>`)
       .join('');
 
     const excerpt = escHtml(getExcerpt(post.content, 160));
@@ -164,6 +171,14 @@
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;');
+  }
+
+  function escAttr(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
   }
 
   /* ---- Init ---- */

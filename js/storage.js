@@ -22,7 +22,11 @@ const BlogStorage = (() => {
   return {
     /** Return all posts sorted newest-first. */
     getAll() {
-      return loadAll().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      return loadAll().sort((a, b) => {
+        const ta = a.createdAt || '';
+        const tb = b.createdAt || '';
+        return tb.localeCompare(ta);
+      });
     },
 
     /** Return a single post by id, or null. */
