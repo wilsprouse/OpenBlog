@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Post — OpenBlog</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="container">
+      <div class="header-inner">
+        <a href="index.html" class="site-title">✍️ OpenBlog</a>
+        <div class="header-actions">
+          <a href="index.html" class="btn btn-secondary btn-sm">← All Posts</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Post -->
+  <main class="container">
+    <article class="post-view">
+
+      <header class="post-view-header">
+        <div class="post-view-meta">
+          <time id="postDate"></time>
+          <span id="postUpdated" style="color:var(--text-muted);"></span>
+        </div>
+
+        <h1 id="postTitle" class="post-view-title"></h1>
+
+        <div id="postTags" class="tags" style="margin-bottom:12px;"></div>
+
+        <div class="post-view-actions">
+          <button id="btnEdit"   class="btn btn-secondary btn-sm">✏️ Edit</button>
+          <button id="btnDelete" class="btn btn-danger    btn-sm">🗑 Delete</button>
+        </div>
+      </header>
+
+      <hr class="post-view-divider">
+
+      <div id="postContent" class="post-content"></div>
+
+    </article>
+  </main>
+
+  <!-- Confirm dialog -->
+  <div id="confirmOverlay" class="confirm-overlay hidden" role="dialog" aria-modal="true">
+    <div class="confirm-box">
+      <div class="confirm-icon">🗑</div>
+      <div class="confirm-title">Delete post?</div>
+      <div class="confirm-msg" id="confirmMsg">This cannot be undone.</div>
+      <div class="confirm-actions">
+        <button id="confirmNo"  class="btn btn-secondary">Cancel</button>
+        <button id="confirmYes" class="btn btn-danger">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container"></div>
+
+  <script src="js/storage.js"></script>
+  <script src="js/post.js"></script>
+</body>
+</html>
